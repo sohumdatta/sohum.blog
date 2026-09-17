@@ -60,7 +60,11 @@ for f in proofs/*.ots; do echo "== $f"; ots verify "$f"; done
 Both outcomes are valid states:
 - `Pending confirmation in Bitcoin blockchain` — calendar attestation exists, anchor not
   yet mined/upgraded. Young proofs live here for hours-to-days. Not a failure.
-- `Success! Bitcoin block N attests ...` — fully anchored (weekly upgrade job, or run
+- `Success! Bitcoin block N attests ...`
+- Two proofs citing the SAME transaction is correct: calendars Merkle-aggregate many
+  stamps into one on-chain anchor.
+- PATH: `pipx ensurepath` APPENDS, which loses to `/usr/bin/ots` — prepend instead:
+  `echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc` — fully anchored (weekly upgrade job, or run
   Actions → bedrock-stamp → Run workflow to attempt an upgrade now).
 
 Ancestry bound (the Merkle claim, executable) — one stamped tip bounds all history
@@ -141,3 +145,16 @@ OTS Bitcoin anchor (upper time bound). No step consults GitHub.
 Bootstrap seam, on the record: commits before `873fd21` ("chore: identity and signing
 baseline") carry a hostname email and read Unverified; the verified era begins there.
 Kept deliberately — genealogy over rewriting — and predates any frozen commitment.
+
+---
+
+## Run record
+
+- **2026-09-17 — first full suite.** Tiers 1, 2, 4, 5, 6: PASS. Tier 3: PASS pending
+  anchor — calendar attestations live on all proofs, two transactions broadcast and
+  counting confirmations; terminal `Success!` awaits confirmations + a proof upgrade.
+  Environment finding: `/usr/bin/ots` is an unrelated text summarizer (v0.4.2) shadowing
+  the OTS client — fixed by PATH prepend; tier 3 guard added. Enforcement finding
+  (pre-run): ruleset existed but sat **Disabled**; armed to Active, unsigned probe then
+  refused. Identity finding: hostname email on pre-`873fd21` commits; baseline set,
+  verified era begins there.
