@@ -42,10 +42,10 @@ params:
   ShowAllPagesInArchive: true
   comments: true                      # renders layouts/_partials/comments.html (giscus)
   giscus:                             # fill these four from https://giscus.app after installing the app
-    repo: ""                          # e.g. <you>/sohum.blog
-    repoId: ""
+    repo: "sohumdatta/sohum.blog"
+    repoId: "R_kgDOUfT97g"
     category: "Comments"
-    categoryId: ""
+    categoryId: "DIC_kwDOUfT97s4DF1os"
     mapping: "pathname"
     inputPosition: "top"
 
