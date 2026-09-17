@@ -1,129 +1,121 @@
-# sohum.blog — git-driven, bedrock-first
+# sohum.blog
 
-Hugo + PaperMod on GitHub Pages. The repository is the record: every entry's history is
-signed, timestamp-anchored, and public. Diode entries pass through three gates:
+The repository is the blog. Every entry, image, sealed dossier, timestamp proof, and this
+file live in one signed, append-only history; the site at https://sohum.blog is a build of
+`main`. The invariants — signed commits only, no force-pushes, no deletions, every push
+OpenTimestamps-anchored — are enforced by repo rulesets, not discipline, and every claim
+is probeable: see **TESTING.md**.
+
+Diode entries pass through three gates:
 
 | gate | state | mechanism |
 |---|---|---|
-| 1 | exists only in git | project branch; plaintext lives in `_vault/` (gitignored), only ciphertext is committed |
-| 2 | deployed dark | button-merge to `main` → GitHub-signed merge commit publishes the SHA-256 commitments; page renders at an opaque URL, excluded from homepage/RSS/sitemap/search, `noindex`; content decrypts only via `#k=<key>` in the URL fragment |
-| 3 | revealed | `tools/reveal.py` publishes plaintext + key in place; the entry rejoins the collections and its homepage panel appears |
+| 1 | exists only in git | project branch; plaintext in `_vault/` (gitignored), only ciphertext committed |
+| 2 | deployed dark | button-merge to `main` (GitHub-signed freeze event) publishes SHA-256 commitments; page at an opaque URL, unlisted, `noindex`, decrypts only via `#k=<key>` |
+| 3 | revealed | `tools/reveal.py` publishes plaintext + key in place; the entry joins the homepage panels |
 
-Bedrock invariants, enforced structurally: a ruleset refuses unsigned pushes on all
-branches; force-pushes and deletions are blocked; every push to `main` is stamped with
-OpenTimestamps (free — calendars pay the Bitcoin anchoring), and the proofs are committed
-back **via the GitHub API so the bot's commits are GitHub-signed** and pass the ruleset.
+## Session rhythm
 
----
-
-## One-time setup
-
-**Prerequisites (local):** git, Hugo ≥ 0.166 extended, Python 3, `pip install cryptography`.
-
-1. **Init and sign.** GitInfo reads history, so init before the first build:
-   ```
-   git init -b main && git config gpg.format ssh
-   git config user.signingkey ~/.ssh/id_ed25519.pub && git config commit.gpgsign true
-   git add -A && git commit -m "scaffold"
-   ```
-   Upload the same SSH key to GitHub as a **signing key** (Settings → SSH and GPG keys →
-   New SSH key → key type: *Signing Key*) so your commits show Verified.
-
-2. **Theme submodule, first build.**
-   ```
-   git submodule add https://github.com/adityatelange/hugo-PaperMod themes/PaperMod
-   git commit -m "theme: PaperMod (submodule)" && hugo server
-   ```
-
-3. **Port the WordPress content.** WP Admin → Tools → Export → download the XML. Commit the
-   raw XML (`import/wp-export.xml`) as its own commit — the genealogy then provably starts
-   from the pre-migration state. Paste the post body into `content/posts/hello-world.md`
-   and the two pages (`about.md`, `on-speaking-to-llms.md`). All three URLs are preserved.
-
-4. **Create the GitHub repo and push.** Then, in the repo settings — these are the
-   non-negotiables, and only you can click them:
-   - **Pages** → Source: *GitHub Actions*.
-   - **Rules → Rulesets → New branch ruleset**: target *All branches*; enable
-     *Require signed commits*, *Block force pushes*, *Restrict deletions*.
-   - **General → Pull Requests**: uncheck *Allow squash merging* and *Allow rebase merging*
-     (squash would collapse per-entry commit counts; button merges must be true merge
-     commits — those are the GitHub-signed freeze events).
-   - **General → Features**: enable *Discussions*.
-
-5. **Comments/likes (giscus).** Install the giscus app on the repo
-   (github.com/apps/giscus), then at giscus.app pick repo + category *Comments* (Announcements
-   type) and copy `repoId`/`categoryId` into `hugo.yaml → params.giscus`. Counts appear on
-   panels after the next build; the daily scheduled build keeps them fresh.
-
-6. **Domain cutover** (order matters): verify `sohum.blog` under Settings → Pages *first*
-   (TXT record), confirm the site on `<you>.github.io`, then at the DNS host replace
-   WordPress.com's records with GitHub Pages' four apex A records + `www` CNAME, add the
-   custom domain, wait for the cert, enforce HTTPS. Only then downgrade the WP.com plan
-   (keep the domain registration).
-
-## Daily use
-
-**Normal post:** `hugo new content/posts/my-title.md` → write → commit on a branch → PR →
-merge with the button. Panel appears; permalink is `/YYYY/MM/DD/slug/`.
-
-**Diode entry:**
 ```
-python3 tools/freeze.py new  pdn-prereg          # makes _vault/pdn-prereg/
-# write _vault/pdn-prereg/index.md, drop attachments (pdf/png/…) alongside
-python3 tools/freeze.py seal pdn-prereg --title "Dossier: PDN pre-registration"
-git checkout -b proj/pdn-prereg && git add content/x && git commit -m "seal: pdn-prereg"
-# PR → merge with the BUTTON  ← the GitHub-signed freeze event
+git pull --rebase origin main     # start here, always
 ```
-The seal step prints the capability URL (`…/x/<opaque>/#k=<key>`). The fragment never
-leaves the browser. Share it, or don't. Re-running `seal` re-encrypts after edits
-(same key, same URL) — do that only *before* the freeze you care about.
 
-**Hygiene for short predictions:** a one-line claim is brute-forceable from its hash, so
-put a random salt line inside the file (see the vault template). Big artifacts don't need it.
+The stamp bot advances `main` with proof commits after every push, so being behind is the
+normal state, not drift. All work lands as signed commits (global git config handles it);
+anything bound for `main` merges via the PR **button** — merge commits only, squash and
+rebase are disabled because they'd collapse per-entry history and skip the GitHub-signed
+merge commit.
 
-**Reveal (after the deadline passes):**
+## Writing a post
+
 ```
-python3 tools/reveal.py pdn-prereg     # or --opaque <dir> --key <b64u> without the vault
-git checkout -b reveal/pdn-prereg && git add content/x && git commit -m "reveal: pdn-prereg"
-# PR → button merge → homepage panel appears
+hugo new content/posts/<slug>/index.md      # a bundle: images live beside the text
+# write → git switch -c proj/<slug> → commit → PR → button merge → panel appears
 ```
-Ciphertext, key, and proofs all stay in the tree, so the freeze re-verifies forever.
 
-**Notice & TL;DR (after the title, as on the WP site):** the originality notice is
-site-wide (`hugo.yaml → params.notice`); override per page with its own string or suppress
-with `notice: false`. Add `tldr: "…"` to any entry's front matter — it renders under the
-title and replaces the auto-excerpt on its homepage panel. Both survive diode re-seals
-and reveals.
+Front matter keys, all retroactively editable (edits are themselves on the record):
+- `tags: [a, b]` — chips on the panel, `/tags/…/` pages
+- `tldr: >-` — renders under the title and replaces the auto-excerpt on the panel
+- `notice:` — override the site imprint with another string, or `false` to suppress
+- `aliases: ["/old/path/"]` — keep superseded URLs resolving
+- `slug:` — owns the `/YYYY/MM/DD/<slug>/` permalink; filename does not
 
-**Retroactive tags:** edit `tags: […]` in any entry's front matter and commit — chips and
-`/tags/…/` pages update, and the edit itself is on the record.
+Site-wide notice strings: `hugo.yaml → params.notice` (per-page imprint) and
+`params.homeNotice` (homepage policy banner).
 
-## What a skeptical reader can check
+## Images
 
-1. `sha256sum <revealed file>` equals the hash rendered by the sealed page's earlier commit.
-2. That commit is a GitHub-signed button merge (`git log --show-signature`).
-3. `ots verify proofs/<tip>.txt.ots` bounds that commit — and, via Merkle ancestry, everything
-   beneath it — to a Bitcoin-anchored time. No trust in the author's clock, or in GitHub.
+In the post's bundle, referenced by bare filename. Caption = the image *title* string;
+layout = a fragment directive on the src:
+
+```markdown
+![alt](figure.jpg "*Markdown caption becomes a figcaption.*")
+![Sohum](me.jpg#right)        # floats, text wraps; #left #center #wide also exist
+```
+
+Floats collapse to full-width on phones; `h2`/`h3` clear floats. Export at web resolution
+(~1600px) **before** committing — history is append-only, every byte is permanent. Assets
+shared across many pages go in `static/`; everything owned by one entry stays in its bundle.
+
+## Diode entries
+
+```
+python3 tools/freeze.py new  <slug>                  # vault at _vault/<slug>/ (never committed)
+# write index.md there, drop attachments alongside; salt short predictions inside the file
+python3 tools/freeze.py seal <slug> --title "…"      # prints the capability URL — keep it private
+git switch -c proj/<slug> && git add content/x && git commit
+# PR → BUTTON merge  ← the GitHub-signed, OTS-stamped freeze event
+...deadline passes...
+python3 tools/reveal.py <slug>                       # or --opaque/--key without the vault
+# branch → PR → button merge → panel appears; ciphertext, key.txt, proofs all remain
+```
+
+Re-sealing an already-revealed entry is refused by design. The fragment key never
+transmits; anyone holding the URL can read and forward — disclosure control, not DRM.
+Sealed pages render client-side (marked.js): captions there are hand-written italic
+lines until reveal, when Hugo takes over.
+
+## Comments, likes, subscribe
+
+Comments and reactions live as GitHub Discussions (giscus) on this repo — widgets are
+live on every non-diode page; panel like/comment counts are baked at build time and
+refresh on the daily scheduled deploy. RSS at `/index.xml`.
 
 ## Map
 
 ```
-tools/freeze.py, reveal.py     gates 1–3 (AES-256-GCM, key in fragment, cryptography lib)
-tools/gitmeta.py               start / commit-count / last-modified per entry → data/gitmeta.json
-tools/social_counts.py         likes & comment counts from Discussions → data/social.json (CI)
-static/js/diode.js (+marked)   in-browser unsealing + per-artifact hash verification
-layouts/…                      PaperMod overrides: metrics meta row, tag chips, giscus, noindex
-.github/workflows/deploy.yml   gitmeta → social → hugo → Pages (daily cron refreshes counts)
-.github/workflows/stamp.yml    OTS-stamp each main push; weekly upgrade; API commits (GitHub-signed)
+tools/freeze.py, reveal.py        gates 1–3 (AES-256-GCM, key in URL fragment)
+tools/gitmeta.py                  per-entry start / commits / last-modified → data/
+tools/social_counts.py            Discussions → panel counts (CI)
+static/js/diode.js (+marked)      in-browser unsealing + hash verification
+layouts/_markup/                  render hooks: external links new-tab, image captions/floats
+layouts/, assets/css/extended/    PaperMod overrides + custom styling
+.github/workflows/deploy.yml      gitmeta → counts → hugo → Pages (daily cron)
+.github/workflows/stamp.yml       OTS-stamp every main push; weekly proof upgrades
+proofs/                           <sha>.txt + .ots — the anchored time bounds
+TESTING.md                        the six-tier probe suite; run after any settings change
 ```
+
+## Verification (the skeptic's chain, no trust in GitHub required)
+
+`sha256sum` of a revealed file equals the hash in the earlier sealed page → that page's
+merge commit is signature-verified (`git log --show-signature`, allowed-signers recipe in
+TESTING.md tier 6) → `ots verify proofs/<sha>.txt.ots` bounds it, and all ancestry beneath
+it, to a Bitcoin-anchored time. Bootstrap seam: commits before `873fd21` predate the
+identity baseline and read Unverified — kept deliberately; the verified era starts there.
 
 ## Known edges
 
-- The capability URL is exactly that: anyone holding it can read and forward. Disclosure
-  control, not DRM. Existence + timing of sealed bundles is public (that's the point).
-- `layouts/list.html` is a patched copy of PaperMod's (tag chips) — re-diff it after theme updates.
-- Panel like/comment counts are as-of-last-build; giscus widgets on the entry pages are live.
-- Verified by build-testing: seal → deploy-dark → decrypt (WebCrypto) → reveal → panel +
-  metrics + tags, with zero leakage into homepage/RSS/sitemap/search. Not testable outside
-  GitHub: the two workflows end-to-end (OTS calendars, Discussions API) — review their logs
-  on first run.
+- Five theme files are overridden site-side (`list`, `single`, `baseof`, `rss`,
+  `opengraph.html`) — re-diff after PaperMod submodule bumps; the last three exist only to
+  silence upstream deprecations and can be deleted when upstream fixes them.
+- `meta/enforcement-witness` is immortal by design (deletion-refusal witness, TESTING.md tier 2).
+- Panel counts are as-of-last-build; giscus widgets are live.
+- A sealed bundle's existence and timing are public — that's the pre-registration point.
+- WordPress's remaining role: registrar for both domains; the frozen WP copy reverts to
+  its subdomain when the plan lapses (Mar 2027).
+
+---
+
+*Supersedes the migration-era README (scaffold + WP cutover runbook, completed
+2026-09-17). That text, like everything else here, remains in this file's git history.*
