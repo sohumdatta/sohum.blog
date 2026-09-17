@@ -39,3 +39,17 @@
 .post-notice p { margin: 0; }
 .post-notice a { text-decoration: underline; }
 .home-notice { margin: 26px 0 10px; font-size: 15px; }
+
+/* image layout directives (#left #right #center #wide on markdown image srcs) */
+.post-content img.img-left,  .post-content figure.img-left  { float: left;  margin: 6px 24px 12px 0;  max-width: min(46%, 320px); }
+.post-content img.img-right, .post-content figure.img-right { float: right; margin: 6px 0 12px 24px;  max-width: min(46%, 320px); }
+.post-content figure.img-left img, .post-content figure.img-right img { margin: 0; }
+.post-content img.img-center { display: block; margin-inline: auto; }
+.post-content img.img-wide, .post-content figure.img-wide img { width: 100%; }
+.post-content h2, .post-content h3 { clear: both; }
+@media (max-width: 600px) {
+  .post-content img.img-left, .post-content img.img-right,
+  .post-content figure.img-left, .post-content figure.img-right {
+    float: none; max-width: 100%; margin: 16px auto; display: block;
+  }
+}

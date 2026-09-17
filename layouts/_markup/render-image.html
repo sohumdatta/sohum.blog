@@ -1,0 +1,23 @@
+{{- /* markdown image -> versatile figure/img.
+       caption: the image TITLE string, markdown allowed -> <figure>+<figcaption>
+       layout:  a #fragment on the src -> class     e.g. ![Sohum](me.jpg#right)
+                left | right  float with text wrap   center | wide  block layouts
+       no title, no fragment -> plain <img>, untouched */ -}}
+{{- $dest := .Destination }}
+{{- $class := "" }}
+{{- $parts := split $dest "#" }}
+{{- if eq (len $parts) 2 }}
+  {{- $tag := index $parts 1 }}
+  {{- if in (slice "left" "right" "center" "wide") $tag }}
+    {{- $dest = index $parts 0 }}
+    {{- $class = printf "img-%s" $tag }}
+  {{- end }}
+{{- end }}
+{{- if .Title }}
+<figure{{ with $class }} class="{{ . }}"{{ end }}>
+  <img loading="lazy" src="{{ $dest | safeURL }}" alt="{{ .PlainText }}">
+  <figcaption>{{ .Title | .Page.RenderString }}</figcaption>
+</figure>
+{{- else }}
+<img loading="lazy"{{ with $class }} class="{{ . }}"{{ end }} src="{{ $dest | safeURL }}" alt="{{ .PlainText }}">
+{{- end }}

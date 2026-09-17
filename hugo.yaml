@@ -1,7 +1,7 @@
 baseURL: "https://sohum.blog/"
 title: "Sohum's Blog"
 theme: PaperMod
-languageCode: en-us
+locale: en-us
 
 enableGitInfo: true
 enableRobotsTXT: true

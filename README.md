@@ -89,6 +89,12 @@ git checkout -b reveal/pdn-prereg && git add content/x && git commit -m "reveal:
 ```
 Ciphertext, key, and proofs all stay in the tree, so the freeze re-verifies forever.
 
+**Notice & TL;DR (after the title, as on the WP site):** the originality notice is
+site-wide (`hugo.yaml → params.notice`); override per page with its own string or suppress
+with `notice: false`. Add `tldr: "…"` to any entry's front matter — it renders under the
+title and replaces the auto-excerpt on its homepage panel. Both survive diode re-seals
+and reveals.
+
 **Retroactive tags:** edit `tags: […]` in any entry's front matter and commit — chips and
 `/tags/…/` pages update, and the edit itself is on the record.
 

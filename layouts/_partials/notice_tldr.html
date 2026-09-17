@@ -1,0 +1,14 @@
+{{- /* Originality notice + TL;DR, rendered just after the title.
+       notice: site-wide default in hugo.yaml params.notice; per page override with a
+       string, or suppress with `notice: false`. tldr: per-page front matter. */ -}}
+{{- $notice := site.Params.notice }}
+{{- if isset .Params "notice" }}{{ $notice = .Params.notice }}{{ end }}
+{{- if $notice }}
+<div class="post-notice">{{ .RenderString $notice }}</div>
+{{- end }}
+{{- with .Params.tldr }}
+<div class="post-tldr">
+  <p class="tldr-label"><strong>TL;DR</strong></p>
+  {{ $.RenderString . }}
+</div>
+{{- end }}

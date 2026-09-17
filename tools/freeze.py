@@ -93,22 +93,28 @@ def cmd_seal(args):
     (bundle / "m.enc").write_bytes(enc(key, json.dumps(manifest).encode()))
 
     stub = bundle / "index.md"
-    date = None
-    if stub.is_file():  # re-seal: keep the original date and any hand edits to tags
+    if stub.is_file() and "diode: false" in stub.read_text():
+        sys.exit(f"{stub} is already revealed — re-sealing would clobber the published page. "
+                 "Start a new entry instead.")
+    keep = {}  # re-seal: preserve date and hand edits to tags / tldr / notice (inline form)
+    if stub.is_file():
         for line in stub.read_text().splitlines():
-            if line.startswith("date:"):
-                date = line.split(":", 1)[1].strip()
-    date = date or datetime.date.today().isoformat()
+            k = line.split(":", 1)[0]
+            if k in ("date", "tags", "tldr", "notice"):
+                keep[k] = line
     fm = ["---",
           f'title: "{meta["title"]}"',
-          f"date: {date}",
+          keep.get("date", f"date: {datetime.date.today().isoformat()}"),
           "diode: true",
           "searchHidden: true",
           "build:",
           "  list: never",
           "  render: always",
-          "tags: []",
-          "frozen:"]
+          keep.get("tags", "tags: []")]
+    for k in ("tldr", "notice"):
+        if k in keep:
+            fm.append(keep[k])
+    fm.append("frozen:")
     for f in frozen:
         fm += [f"  - payload: {f['payload']}",
                f"    label: {f['label']}",

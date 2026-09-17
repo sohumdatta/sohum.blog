@@ -53,7 +53,7 @@
 
 {{- if and .IsHome (eq $paginator.PageNumber 1) }}
 {{- with (site.Params.homeNotice | default site.Params.notice) }}
-<div class="post-notice home-notice">{{ . | markdownify }}</div>
+<div class="post-notice home-notice">{{ $.RenderString . }}</div>
 {{- end }}
 {{- end }}
 
