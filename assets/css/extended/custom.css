@@ -16,3 +16,26 @@
 .diode-ok   { color: var(--secondary); }
 .diode-fail { font-weight: 700; }
 #diode-artifacts ul { margin-top: 8px; }
+
+/* originality notice + TL;DR, just after the title */
+.post-notice {
+  margin: 2px 0 18px; padding: 9px 13px; border-radius: 4px;
+  background: var(--code-bg); font-size: 15px; line-height: 1.6;
+}
+.post-notice p { margin: 0; }
+.post-tldr { margin: 0 0 30px; padding-left: 14px; border-inline-start: 3px solid var(--border); }
+.post-tldr .tldr-label { margin: 0 0 4px; }
+.post-tldr p { margin: 0 0 8px; }
+
+/* notice restyle: framed policy imprint (supersedes the earlier .post-notice rule) */
+.post-notice {
+  margin: 2px 0 22px; padding: 11px 15px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-inline-start: 4px solid var(--primary);
+  border-radius: 0 4px 4px 0;
+  font-size: 14.5px; line-height: 1.65;
+}
+.post-notice p { margin: 0; }
+.post-notice a { text-decoration: underline; }
+.home-notice { margin: 26px 0 10px; font-size: 15px; }

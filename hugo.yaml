@@ -20,6 +20,18 @@ pagination:
 
 params:
   env: production
+  # every single page (posts, pages, dossier stubs); override per page, or notice: false
+  notice: >-
+    Unless explicitly cited or specified otherwise, _everything_ here is my
+    original creation.
+  # homepage banner (falls back to notice if unset)
+  homeNotice: >-
+    I believe **everyone** should have an opportunity to present their thoughts
+    and creations in their own _unfiltered_ voice. Thus, I have a policy
+    regarding _everything_ in my blog: unless cited or specified otherwise,
+    **everything here is my original creation**. Therefore, unless otherwise
+    specified, I _never_ use AI for any content here. I extend the
+    [same courtesy](https://nullaicreationshostedbysohum.com/) to AI.
   description: "Sohum's blog"
   defaultTheme: auto
   mainSections: [posts, x]            # x = diode section; sealed entries are excluded by _build, revealed ones surface here
