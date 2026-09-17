@@ -1,0 +1,68 @@
+name: bedrock-stamp
+# Every push to main gets its tip commit hash stamped with OpenTimestamps (free; the
+# calendar servers pay the Bitcoin anchoring). One stamp of the tip bounds every commit
+# beneath it, because a commit hash Merkle-commits its entire ancestry.
+# Proofs are committed back through the GitHub API on purpose: API commits are
+# GitHub-signed, so they pass the require-signed-commits ruleset.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['proofs/**']   # the proof commit itself must not re-trigger stamping
+  schedule:
+    - cron: '41 6 * * 1'          # weekly: upgrade pending proofs once Bitcoin-anchored
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  stamp:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install OpenTimestamps client
+        run: pipx install opentimestamps-client
+      - name: Stamp the tip
+        run: |
+          mkdir -p out
+          printf '%s\n' "${GITHUB_SHA}" > "out/${GITHUB_SHA}.txt"
+          ots stamp "out/${GITHUB_SHA}.txt"
+      - name: Commit proof via API (GitHub-signed)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for f in "out/${GITHUB_SHA}.txt" "out/${GITHUB_SHA}.txt.ots"; do
+            curl -sS -X PUT \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/proofs/$(basename "$f")" \
+              -d "{\"message\":\"stamp: ${GITHUB_SHA}\",\"branch\":\"main\",\"content\":\"$(base64 -w0 "$f")\"}" \
+              -o /dev/null -w "proofs/$(basename "$f"): HTTP %{http_code}\n"
+          done
+
+  upgrade:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OpenTimestamps client
+        run: pipx install opentimestamps-client
+      - name: Upgrade pending proofs
+        run: |
+          shopt -s nullglob
+          for f in proofs/*.ots; do ots upgrade "$f" || true; done
+      - name: Push upgraded proofs back via API (GitHub-signed)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for f in $(git diff --name-only -- proofs); do
+            sha=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/${f}?ref=main" \
+              | python3 -c 'import sys,json;print(json.load(sys.stdin)["sha"])')
+            curl -sS -X PUT \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/${f}" \
+              -d "{\"message\":\"stamp: upgrade $(basename "$f")\",\"branch\":\"main\",\"sha\":\"${sha}\",\"content\":\"$(base64 -w0 "$f")\"}" \
+              -o /dev/null -w "${f}: HTTP %{http_code}\n"
+          done

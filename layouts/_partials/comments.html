@@ -1,0 +1,20 @@
+{{- /* giscus: comment trees + reactions stored as GitHub Discussions on this repo.
+       Sealed (diode) entries carry no public thread. */ -}}
+{{- if and (not .Params.diode) site.Params.giscus.repoId }}
+<div class="giscus"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="{{ site.Params.giscus.repo }}"
+        data-repo-id="{{ site.Params.giscus.repoId }}"
+        data-category="{{ site.Params.giscus.category }}"
+        data-category-id="{{ site.Params.giscus.categoryId }}"
+        data-mapping="{{ site.Params.giscus.mapping | default "pathname" }}"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="{{ site.Params.giscus.inputPosition | default "top" }}"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous" async>
+</script>
+{{- end }}

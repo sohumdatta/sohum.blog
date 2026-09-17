@@ -1,0 +1,18 @@
+/* tag chips on homepage / list cards */
+.entry-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+.entry-tags a {
+  position: relative; z-index: 1;             /* clickable above the card overlay link */
+  font-size: 12px; line-height: 1.7; padding: 0 8px; border-radius: 4px;
+  background: var(--code-bg); color: var(--secondary);
+}
+/* sealed (diode) entries */
+.diode-state { color: var(--secondary); }
+.diode-table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 13px; }
+.diode-table th, .diode-table td {
+  text-align: left; padding: 5px 10px 5px 0;
+  border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.diode-hash code { word-break: break-all; }
+.diode-ok   { color: var(--secondary); }
+.diode-fail { font-weight: 700; }
+#diode-artifacts ul { margin-top: 8px; }

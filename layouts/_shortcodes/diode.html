@@ -1,0 +1,22 @@
+<div class="diode" id="diode">
+  <p class="diode-state" id="diode-state">This entry is sealed. The artifacts below are frozen as
+  SHA-256 commitments of their plaintext; the signed commit publishing this page fixes them in the
+  record. If your address ends in <code>#k=&lt;key&gt;</code>, the content decrypts in your browser
+  — the key never leaves it.</p>
+  <table class="diode-table">
+    <thead><tr><th>artifact</th><th>SHA-256 of plaintext</th><th></th></tr></thead>
+    <tbody>
+    {{- range .Page.Params.frozen }}
+      <tr data-payload="{{ .payload }}" data-sha="{{ .sha256 }}">
+        <td>{{ .label }}</td>
+        <td class="diode-hash"><code>{{ .sha256 }}</code></td>
+        <td class="diode-check"></td>
+      </tr>
+    {{- end }}
+    </tbody>
+  </table>
+  <div id="diode-root"></div>
+  <div id="diode-artifacts"></div>
+</div>
+<script src="{{ "js/vendor/marked.min.js" | absURL }}"></script>
+<script src="{{ "js/diode.js" | absURL }}"></script>

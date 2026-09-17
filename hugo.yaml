@@ -1,0 +1,45 @@
+baseURL: "https://sohum.blog/"
+title: "Sohum's Blog"
+theme: PaperMod
+languageCode: en-us
+
+enableGitInfo: true
+enableRobotsTXT: true
+
+permalinks:
+  posts: /:year/:month/:day/:slug/    # preserves your WordPress URLs
+
+outputs:
+  home: [HTML, RSS, JSON]             # JSON feeds PaperMod's search page
+
+taxonomies:
+  tag: tags
+
+pagination:
+  pagerSize: 10
+
+params:
+  env: production
+  description: "Sohum's blog"
+  defaultTheme: auto
+  mainSections: [posts, x]            # x = diode section; sealed entries are excluded by _build, revealed ones surface here
+  ShowReadingTime: true
+  ShowPostNavLinks: true
+  ShowShareButtons: false
+  ShowBreadCrumbs: false
+  ShowAllPagesInArchive: true
+  comments: true                      # renders layouts/_partials/comments.html (giscus)
+  giscus:                             # fill these four from https://giscus.app after installing the app
+    repo: ""                          # e.g. <you>/sohum.blog
+    repoId: ""
+    category: "Comments"
+    categoryId: ""
+    mapping: "pathname"
+    inputPosition: "top"
+
+menu:
+  main:
+    - { name: about,   url: /about/,    weight: 10 }
+    - { name: archive, url: /archives/, weight: 20 }
+    - { name: tags,    url: /tags/,     weight: 30 }
+    - { name: search,  url: /search/,   weight: 40 }
