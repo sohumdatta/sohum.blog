@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# post-commit hook: SAFETY NET stamping. Does nothing until BLOG_STAMP_AFTER (default 30)
+# content commits accumulate on this branch since the last stamp (or branch point);
+# then stamps via tools/stamp-now, retrying at every commit until calendars answer.
+# Manual stamping any time: bash tools/stamp-now   Install: bash tools/install-hooks.sh
+set -u
+N="${BLOG_STAMP_AFTER:-30}"
+branch=$(git symbolic-ref --quiet --short HEAD) || exit 0
+[ "$branch" = "main" ] && exit 0                       # main's pushes are stamped by CI
+case "$(git log -1 --format=%s)" in "stamp: local"*) exit 0 ;; esac
+base=$(git merge-base HEAD origin/main 2>/dev/null) \
+  || base=$(git rev-list --max-parents=0 HEAD | tail -1)
+last_stamp=$(git log -1 --grep='^stamp: local' --format=%H "${base}..HEAD")
+since="${last_stamp:-$base}"
+count=$(git log --format=%s "${since}..HEAD" | grep -vc '^stamp: local' || true)
+[ -n "$count" ] && [ "$count" -ge "$N" ] || exit 0
+echo "post-commit: ${count} unstamped commits (threshold ${N}) — stamping"
+bash "$(git rev-parse --show-toplevel)/tools/stamp-now" || true
+exit 0

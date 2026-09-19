@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Stamp the current commit with OpenTimestamps, on demand, as its own signed commit.
+# Usage: bash tools/stamp-now        (branch work; offline -> clear failure, no debris)
+set -u
+sha=$(git rev-parse HEAD) || exit 1
+case "$(git log -1 --format=%s)" in "stamp: local"*) echo "HEAD is already a stamp commit"; exit 0 ;; esac
+command -v ots >/dev/null 2>&1 || { echo "stamp-now: ots client not found"; exit 1; }
+cd "$(git rev-parse --show-toplevel)"
+mkdir -p proofs
+printf '%s\n' "$sha" > "proofs/${sha}.txt"
+if ots stamp "proofs/${sha}.txt" >/dev/null 2>&1 && [ -s "proofs/${sha}.txt.ots" ]; then
+  git add "proofs/${sha}.txt" "proofs/${sha}.txt.ots"
+  git commit -q -m "stamp: local ${sha}"
+  echo "stamped ${sha}"
+else
+  rm -f "proofs/${sha}.txt" "proofs/${sha}.txt.ots"
+  echo "stamp-now: calendars unreachable, nothing recorded"; exit 1
+fi
