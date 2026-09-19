@@ -111,9 +111,9 @@
           var attr = el.tagName === "IMG" ? "src" : "href";
           var v = (el.getAttribute(attr) || "").replace(/^\.\//, "");
           if (urls[v]) el.setAttribute(attr, urls[v]);
-          else if (el.tagName === "A" && /^#k=/.test(el.getAttribute("href") || "") === false && el.origin === location.origin && el.pathname.indexOf("/x/") === 0 && !el.hash) {
-            el.hash = location.hash;     // carry the key across intra-diode links
-          }
+          // no key-carry across /x/ links: every dossier has its own key by
+          // construction, so carrying this page's key to another dossier can
+          // only ever produce a wrong-key unseal failure on its stub
         });
       }
 
