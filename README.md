@@ -57,6 +57,17 @@ Floats collapse to full-width on phones; `h2`/`h3` clear floats. Export at web r
 (~1600px) **before** committing — history is append-only, every byte is permanent. Assets
 shared across many pages go in `static/`; everything owned by one entry stays in its bundle.
 
+## Linked-page constellations
+
+`index.md` makes a *leaf* bundle — one page; sibling `.md` files are silently demoted to
+resources. Linked multi-page pieces need `_index.md` (a *branch* bundle). Pattern for one
+homepage panel over many pages: a hub post at `content/posts/<slug>/` (panel, tldr,
+comments) linking into `content/<slug>/_index.md` whose children are leaf bundles, images
+beside each page. Hub links site-absolute (`/<slug>/page1/`); siblings relative
+(`../page2/`) or `{{</* ref "page2" */>}}` to make broken links fail the build. Metrics are
+per-file with no roll-up: each page keeps its own since/commits/updated; the hub's clock
+does not move on constellation edits.
+
 ## Diode entries
 
 ```
@@ -74,6 +85,25 @@ Re-sealing an already-revealed entry is refused by design. The fragment key neve
 transmits; anyone holding the URL can read and forward — disclosure control, not DRM.
 Sealed pages render client-side (marked.js): captions there are hand-written italic
 lines until reveal, when Hugo takes over.
+
+**Campaigns (hierarchies of dossiers).** Serial pre-registrations are independent freeze
+cycles. A *sealed index* — one more dossier whose body is the explanation plus a table of
+its children — freezes the SET, the selective-reporting defense: link children by bare
+opaque URLs, never with `#k=` fragments (each key stays its own; no master-key cascade).
+Partial reveal is a valid third state: revealing only the index publishes verifiable
+membership while every child stays ciphertext (obscurity ends, `noindex` + encryption
+remain, and suffice). All-at-once release: one branch — `reveal.py` on every entry plus
+the public post — one button merge. Bind datasets in reveal posts by **commit hash or
+per-file SHA-256**, never bare links (links point at mutable things); raw data lives in
+its own repo, hashes make location irrelevant. The freeze→release order is machine-checkable:
+`git merge-base --is-ancestor <freeze-sha> <release-sha>`, each endpoint OTS-bounded.
+
+**Interior stamping (branch work).** CI stamps `main` pushes only — stamping stays rarer
+than committing. `bash tools/stamp-now` stamps the current commit on demand; the installed
+hook fires only as a safety net after 30 unstamped commits (`BLOG_STAMP_AFTER`), retrying
+each commit while offline. **A locally-stamped branch is welded**: stamps bind to hashes,
+and hashes survive extension but not re-authorship — merge `main` inward, never rebase or
+amend below a stamp; never `stamp-now` on `main`.
 
 ## Comments, likes, subscribe
 
@@ -93,6 +123,8 @@ layouts/, assets/css/extended/    PaperMod overrides + custom styling
 .github/workflows/deploy.yml      gitmeta → counts → hugo → Pages (daily cron)
 .github/workflows/stamp.yml       OTS-stamp every main push; weekly proof upgrades
 proofs/                           <sha>.txt + .ots — the anchored time bounds
+tools/stamp-now, post-commit      on-demand + safety-net OTS stamping for branch work
+tools/install-hooks.sh            once per clone (hooks are unversioned); BLOG_STAMP_AFTER=30
 TESTING.md                        the six-tier probe suite; run after any settings change
 ```
 
@@ -109,6 +141,8 @@ identity baseline and read Unverified — kept deliberately; the verified era st
 - Five theme files are overridden site-side (`list`, `single`, `baseof`, `rss`,
   `opengraph.html`) — re-diff after PaperMod submodule bumps; the last three exist only to
   silence upstream deprecations and can be deleted when upstream fixes them.
+- A branch carrying `stamp: local` commits may only grow — rebase/amend below a stamp
+  orphans the attested hashes (see Interior stamping).
 - `meta/enforcement-witness` is immortal by design (deletion-refusal witness, TESTING.md tier 2).
 - Panel counts are as-of-last-build; giscus widgets are live.
 - A sealed bundle's existence and timing are public — that's the pre-registration point.
