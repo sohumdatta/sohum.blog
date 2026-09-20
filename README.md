@@ -41,6 +41,65 @@ All work lands as signed commits (global git config handles it); anything bound 
 `main` merges via the PR **button** — merge commits only, squash and rebase are disabled
 because they'd collapse per-entry history and skip the GitHub-signed merge commit.
 
+## Git playbook (copy-paste recipes)
+
+Every recipe starts and ends on `main`. Example slug throughout: `quiet-machines`.
+
+**New post, start to published:**
+
+```
+git switch main && git pull --rebase origin main
+git switch -c proj/quiet-machines
+hugo new content/posts/quiet-machines/index.md
+# ...write; preview with: hugo server
+git add content/posts/quiet-machines/
+git commit -m "post: quiet machines (draft)"
+git push -u origin proj/quiet-machines        # prints a PR link — open it
+# on GitHub: Create pull request -> Merge pull request (the button)
+git switch main && git pull --rebase origin main
+git branch -d proj/quiet-machines             # local tidy-up; the remote branch stays (deletions blocked)
+```
+
+**More commits on the same branch, before merging:**
+
+```
+git add -A && git commit -m "post: tighten section 2"
+git push                                      # -u above made every later push just this
+```
+
+**Edit an already-published post:**
+
+```
+git switch main && git pull --rebase origin main
+git switch -c proj/quiet-machines-v2
+# edit content/posts/quiet-machines/index.md
+git add -A && git commit -m "post: quiet machines — corrections"
+git push -u origin proj/quiet-machines-v2
+# PR -> button merge; the site updates on deploy
+git switch main && git pull --rebase origin main
+git branch -d proj/quiet-machines-v2
+```
+
+**Long-lived branch needs `main`'s newer state (never rebase):**
+
+```
+git switch main && git pull --rebase origin main
+git switch proj/quiet-machines
+git merge main                                # merge INTO the branch: extends, never re-authors
+```
+
+**Where am I, what changed:**
+
+```
+git status                                    # current branch + staged/unstaged files
+git log --oneline -10                         # recent history
+git diff                                      # unstaged edits; git diff --staged for staged
+```
+
+**Mistakes, safely:** wrong or missing content — just make another commit; append-only is
+the house style. `git commit --amend` is permitted ONLY while a commit is both unpushed
+and unstamped; after either, amending is re-authorship — add a new commit instead.
+
 ## Writing a post
 
 ```
