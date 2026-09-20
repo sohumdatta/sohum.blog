@@ -16,15 +16,30 @@ Diode entries pass through three gates:
 
 ## Session rhythm
 
+Two modes, and the pull command belongs to only one of them:
+
+**On `main`** — session start, and before cutting any branch:
+
 ```
-git pull --rebase origin main     # start here, always
+git switch main && git pull --rebase origin main
 ```
 
-The stamp bot advances `main` with proof commits after every push, so being behind is the
-normal state, not drift. All work lands as signed commits (global git config handles it);
-anything bound for `main` merges via the PR **button** — merge commits only, squash and
-rebase are disabled because they'd collapse per-entry history and skip the GitHub-signed
-merge commit.
+The stamp bot advances `main` with proof commits after every push, so being behind is
+normal, not drift; the rebase here only replays your own unpushed `main` commits
+(usually none) over the bot's. Branching from freshly-pulled `main` keeps every branch
+point at most one stamp old.
+
+**On a working branch** — the common case, writing a post: commit freely, and do **not**
+run `pull --rebase origin main` there. That command would rebase the whole branch onto
+`main` — the re-authorship that orphans stamped hashes and that the ruleset refuses at
+push time. A branch that is merely *behind* `main` needs nothing: the PR button merges it
+regardless, conflicts aside. If a long-lived branch genuinely needs `main`'s newer state
+(shared-file edits — rare for content-scoped branches), refresh `main` first, then
+`git merge main` *into* the branch: merge extends, rebase re-authors.
+
+All work lands as signed commits (global git config handles it); anything bound for
+`main` merges via the PR **button** — merge commits only, squash and rebase are disabled
+because they'd collapse per-entry history and skip the GitHub-signed merge commit.
 
 ## Writing a post
 
@@ -98,18 +113,38 @@ per-file SHA-256**, never bare links (links point at mutable things); raw data l
 its own repo, hashes make location irrelevant. The freeze→release order is machine-checkable:
 `git merge-base --is-ancestor <freeze-sha> <release-sha>`, each endpoint OTS-bounded.
 
-**Interior stamping (branch work).** CI stamps `main` pushes only — stamping stays rarer
-than committing. `bash tools/stamp-now` stamps the current commit on demand; the installed
-hook fires only as a safety net after 30 unstamped commits (`BLOG_STAMP_AFTER`), retrying
-each commit while offline. **A locally-stamped branch is welded**: stamps bind to hashes,
-and hashes survive extension but not re-authorship — merge `main` inward, never rebase or
-amend below a stamp; never `stamp-now` on `main`.
-
 ## Comments, likes, subscribe
 
 Comments and reactions live as GitHub Discussions (giscus) on this repo — widgets are
 live on every non-diode page; panel like/comment counts are baked at build time and
 refresh on the daily scheduled deploy. RSS at `/index.xml`.
+
+## Stamping mechanics
+
+Three stampers, one `proofs/` ledger:
+
+- **CI, automatic:** every push to `main` gets its tip hash OTS-stamped by `stamp.yml`;
+  the proof pair (`<sha>.txt` + `.ots`) is committed back through the GitHub API, so the
+  bot's commits are GitHub-signed and pass the ruleset. One tip stamp bounds every commit
+  beneath it — a hash Merkle-commits its whole ancestry — which is why interior commits
+  need no stamps of their own for the freeze/reveal epistemics.
+- **`bash tools/stamp-now`, manual:** stamps the current branch commit on demand, as its
+  own signed `stamp: local` commit. Offline → clear failure, no debris. Never on `main`:
+  CI covers it, and the `pull --rebase` rhythm would re-author a local stamp waiting there.
+- **Safety net, hook:** after 30 content commits with no stamp on the branch
+  (`BLOG_STAMP_AFTER` to change), the post-commit hook stamps automatically, retrying at
+  every commit while calendars are unreachable; a manual stamp resets its counter. Hooks
+  are unversioned — `bash tools/install-hooks.sh` once per clone.
+
+Proof lifecycle: fresh proofs verify as *Pending confirmation in Bitcoin blockchain*
+(calendar attestation held, anchor maturing); the weekly upgrade job — or a manual
+Actions → bedrock-stamp dispatch — writes the Bitcoin attestation in, after which
+`ots verify` reads *Success! Bitcoin block N attests…* permanently, no calendar needed.
+Branch-local proofs merge into `main`'s ledger with their branch and mature the same way.
+
+**The weld:** stamps bind to hashes, and hashes survive extension but not re-authorship.
+From a branch's first `stamp: local` commit onward, that branch may only grow — no
+rebase, no amend below a stamp; catch up with `main` by merging it inward.
 
 ## Map
 
@@ -142,7 +177,7 @@ identity baseline and read Unverified — kept deliberately; the verified era st
   `opengraph.html`) — re-diff after PaperMod submodule bumps; the last three exist only to
   silence upstream deprecations and can be deleted when upstream fixes them.
 - A branch carrying `stamp: local` commits may only grow — rebase/amend below a stamp
-  orphans the attested hashes (see Interior stamping).
+  orphans the attested hashes (see Stamping mechanics).
 - `meta/enforcement-witness` is immortal by design (deletion-refusal witness, TESTING.md tier 2).
 - Panel counts are as-of-last-build; giscus widgets are live.
 - A sealed bundle's existence and timing are public — that's the pre-registration point.
