@@ -1,10 +1,13 @@
+/* ===== sohum.blog custom styles — canonical file, supersedes all appended history ===== */
+
 /* tag chips on homepage / list cards */
 .entry-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
 .entry-tags a {
-  position: relative; z-index: 1;             /* clickable above the card overlay link */
+  position: relative; z-index: 1;               /* clickable above the card overlay link */
   font-size: 12px; line-height: 1.7; padding: 0 8px; border-radius: 4px;
   background: var(--code-bg); color: var(--secondary);
 }
+
 /* sealed (diode) entries */
 .diode-state { color: var(--secondary); }
 .diode-table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 13px; }
@@ -17,17 +20,7 @@
 .diode-fail { font-weight: 700; }
 #diode-artifacts ul { margin-top: 8px; }
 
-/* originality notice + TL;DR, just after the title */
-.post-notice {
-  margin: 2px 0 18px; padding: 9px 13px; border-radius: 4px;
-  background: var(--code-bg); font-size: 15px; line-height: 1.6;
-}
-.post-notice p { margin: 0; }
-.post-tldr { margin: 0 0 30px; padding-left: 14px; border-inline-start: 3px solid var(--border); }
-.post-tldr .tldr-label { margin: 0 0 4px; }
-.post-tldr p { margin: 0 0 8px; }
-
-/* notice restyle: framed policy imprint (supersedes the earlier .post-notice rule) */
+/* originality notice: framed policy imprint */
 .post-notice {
   margin: 2px 0 22px; padding: 11px 15px;
   background: var(--code-bg);
@@ -39,6 +32,19 @@
 .post-notice p { margin: 0; }
 .post-notice a { text-decoration: underline; }
 .home-notice { margin: 26px 0 10px; font-size: 15px; }
+
+/* TL;DR under the title */
+.post-tldr { margin: 0 0 30px; padding-left: 14px; border-inline-start: 3px solid var(--border); }
+.post-tldr .tldr-label { margin: 0 0 4px; }
+.post-tldr p { margin: 0 0 8px; }
+
+/* captioned figures (render-image hook: title -> figure/figcaption) */
+.post-content figure { margin: 26px 0; text-align: center; }
+.post-content figure img { margin: 0 auto; }
+.post-content figure > figcaption {
+  text-align: center; font-style: italic; font-weight: 400;
+  font-size: 14px; color: var(--secondary); margin-top: 6px;
+}
 
 /* image layout directives (#left #right #center #wide on markdown image srcs) */
 .post-content img.img-left,  .post-content figure.img-left  { float: left;  margin: 6px 24px 12px 0;  max-width: min(46%, 320px); }
