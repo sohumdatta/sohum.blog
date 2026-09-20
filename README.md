@@ -96,6 +96,18 @@ git log --oneline -10                         # recent history
 git diff                                      # unstaged edits; git diff --staged for staged
 ```
 
+**Push rejected — `! [rejected] main -> main (fetch first)`:** normal, not damage. The
+stamp bot commits proof files to `main` after every push, so the remote is nearly always
+ahead of you by the time you push again. The fix is always the same two lines:
+
+```
+git pull --rebase origin main
+git push
+```
+
+(On `main`, this rebase only replays your own commits over the bot's proofs — it never
+touches published history. The same rejection on a *branch* push means something
+different: you amended or rewrote already-pushed commits — see Mistakes below.)
 **Mistakes, safely:** wrong or missing content — just make another commit; append-only is
 the house style. `git commit --amend` is permitted ONLY while a commit is both unpushed
 and unstamped; after either, amending is re-authorship — add a new commit instead.
